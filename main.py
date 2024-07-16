@@ -1,8 +1,35 @@
 from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 import requests
 
 app = FastAPI()
 
+# Global dictionary to store the latest article's first paragraph
+state = {"first_paragraph": None}
+
+# Define the data model for the article input
+class ArticleInput(BaseModel):
+    name: str
+
+# POST endpoint to accept an article name
+@app.post("/articles")
+def receive_article(article: ArticleInput):
+    formatted_title = article.name.replace(" ", "_")
+    url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{formatted_title}"
+    
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        data = response.json()
+        if "extract" in data:
+            state["first_paragraph"] = data["extract"]
+            return {"message": "Article received", "article_title": article.name, "first_paragraph": state["first_paragraph"]}
+        else:
+            raise HTTPException(status_code=404, detail="Summary not available.")
+    else:
+        raise HTTPException(status_code=response.status_code, detail="Error fetching article summary.")
+
+#GET endpoint to fetch the first paragraph of a Wikipedia article directly
 @app.get("/wikipedia/{article_title}")
 def get_wikipedia_first_paragraph(article_title: str):
     formatted_title = article_title.replace(" ", "_")
@@ -13,11 +40,21 @@ def get_wikipedia_first_paragraph(article_title: str):
     if response.status_code == 200:
         data = response.json()
         if "extract" in data:
-            first_paragraph = data["extract"]
-            return {"article_title": article_title, "first_paragraph": first_paragraph}
+            return {"article_title": article_title, "first_paragraph": data["extract"]}
         else:
             raise HTTPException(status_code=404, detail="Summary not available.")
     else:
         raise HTTPException(status_code=response.status_code, detail="Error fetching article summary.")
+
+
+
+
+# BELOW- this is what prints it on the web server without it it will just be in the swagger
+@app.get("/")
+def read_root():
+    if state["first_paragraph"]:
+        return {"message": f"Most recent article: {state['first_paragraph']}"}
+    else:
+        return {"message": "No articles posted yet."}
 
 # Run the server with: uvicorn your_script_name:app --reload
