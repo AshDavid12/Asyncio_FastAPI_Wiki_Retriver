@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-import requests
+import httpx
 
 app = FastAPI()
 
@@ -13,48 +13,65 @@ class ArticleInput(BaseModel):
 
 # POST endpoint to accept an article name
 @app.post("/articles")
-def receive_article(article: ArticleInput):
-    formatted_title = article.name.replace(" ", "_")
-    url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{formatted_title}"
-    
-    response = requests.get(url)
-    
-    if response.status_code == 200:
-        data = response.json()
-        if "extract" in data:
-            state["first_paragraph"] = data["extract"]
-            return {"message": "Article received", "article_title": article.name, "first_paragraph": state["first_paragraph"]}
+async def receive_article(article: ArticleInput):
+    formatted_title = article.name.replace(" ", "_")  # Replace spaces with underscores for the Wikipedia URL
+    url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{formatted_title}"  # Construct the URL for the Wikipedia API
+
+    async with httpx.AsyncClient(follow_redirects=True) as client:  # Enable follow redirects
+        try:
+            response = await client.get(url)  # Send a GET request to the Wikipedia API and await the response
+        except httpx.RequestError as exc:
+            # Handle any request exceptions (e.g., network issues)
+            raise HTTPException(status_code=500, detail=f"An error occurred while requesting {exc.request.url!r}.") from exc
+
+    if response.status_code == 200:  # Check if the response status code is 200 (OK)
+        try:
+            data = response.json()  # Parse the response JSON content
+        except ValueError:
+            # Handle JSON parsing errors
+            raise HTTPException(status_code=500, detail="Error parsing response from Wikipedia API.")
+        
+        if "extract" in data:  # Check if the "extract" key is present in the response data
+            state["first_paragraph"] = data["extract"]  # Store the first paragraph in the global state
+            return {"message": "Article received", "article_title": article.name, "first_paragraph": state["first_paragraph"]}  # Return a JSON response
         else:
-            raise HTTPException(status_code=404, detail="Summary not available.")
+            raise HTTPException(status_code=404, detail="Summary not available.")  # Raise a 404 error if the summary is not available
     else:
-        raise HTTPException(status_code=response.status_code, detail="Error fetching article summary.")
+        # Log detailed error information
+        raise HTTPException(status_code=response.status_code, detail=f"Error fetching article summary. Status code: {response.status_code}, Response: {response.text}")
 
-# #GET endpoint to fetch the first paragraph of a Wikipedia article directly
-# @app.get("/wikipedia/{article_title}")
-# def get_wikipedia_first_paragraph(article_title: str):
-#     formatted_title = article_title.replace(" ", "_")
-#     url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{formatted_title}"
-    
-#     response = requests.get(url)
-    
-#     if response.status_code == 200:
-#         data = response.json()
-#         if "extract" in data:
-#             return {"article_title": article_title, "first_paragraph": data["extract"]}
-#         else:
-#             raise HTTPException(status_code=404, detail="Summary not available.")
-#     else:
-#         raise HTTPException(status_code=response.status_code, detail="Error fetching article summary.")
+# GET endpoint to fetch the first paragraph of a Wikipedia article directly
+@app.get("/wikipedia/{article_title}")
+async def get_wikipedia_first_paragraph(article_title: str):
+    formatted_title = article_title.replace(" ", "_")  # Replace spaces with underscores for the Wikipedia URL
+    url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{formatted_title}"  # Construct the URL for the Wikipedia API
 
+    async with httpx.AsyncClient(follow_redirects=True) as client:  # Enable follow REDIRECTS
+        try:
+            response = await client.get(url)  # Send a GET request to the Wikipedia API and await the response
+        except httpx.RequestError as exc:
+            # Handle any request exceptions (e.g., network issues)
+            raise HTTPException(status_code=500, detail=f"An error occurred while requesting {exc.request.url!r}.") from exc
 
+    if response.status_code == 200:  # Check if the response status code is 200 (OK)
+        try:
+            data = response.json()  # Parse the response JSON content
+        except ValueError:
+            # Handle JSON parsing errors
+            raise HTTPException(status_code=500, detail="Error parsing response from Wikipedia API.")
+        
+        if "extract" in data:  # Check if the "extract" key is present in the response data
+            return {"article_title": article_title, "first_paragraph": data["extract"]}  # Return a JSON response with the article title and first paragraph
+        else:
+            raise HTTPException(status_code=404, detail="Summary not available.")  # Raise a 404 error if the summary is not available
+    else:
+        # Log detailed error information
+        raise HTTPException(status_code=response.status_code, detail=f"Error fetching article summary. Status code: {response.status_code}, Response: {response.text}")
 
-
-# BELOW- this is what prints it on the web server without it it will just be in the swagger
+# Root endpoint to display the latest stored article's first paragraph
 @app.get("/")
-def read_root():
-    if state["first_paragraph"]:
-        return {"message": f"Most recent article: {state['first_paragraph']}"}
+async def read_root():
+    if state["first_paragraph"]:  # Check if there is a stored first paragraph in the global state
+        return {"message": f"Most recent article: {state['first_paragraph']}"}  # Return the most recent article's first paragraph
     else:
-        return {"message": "No articles posted yet."}
-
-# Run the server with: uvicorn your_script_name:app --reload
+        return {"message": "No articles posted yet."}  # Return a message indicating no articles have been posted
