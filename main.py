@@ -15,15 +15,19 @@ class ArticleInput(BaseModel):
 @app.post("/articles")
 def receive_article(article: ArticleInput):
     formatted_title = article.name.replace(" ", "_")
-    url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{formatted_title}"
+    url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{formatted_title}" #this is from the wikiapi doc
     
-    response = requests.get(url)
+    response = requests.get(url) #from the HTTP GET request to wiki API store an instance of requests.Response class in reponse
+    # this class has attributes like status code,text,content
     
-    if response.status_code == 200:
-        data = response.json()
-        if "extract" in data:
-            state["first_paragraph"] = data["extract"]
+    if response.status_code == 200: #sucsses request
+        data = response.json() #convert to json
+        if "extract" in data: #by the wiki api extact (key should be in json) is where the summery will be
+            state["first_paragraph"] = data["extract"] #state is a dictionary so just put the summery as value in the dic under the firstpar key
+            #article title is achived bc article is an instance of apydantic class articleinput. that has attribute name so .name 
+            #works for acssessing 
             return {"message": "Article received", "article_title": article.name, "first_paragraph": state["first_paragraph"]}
+        
         else:
             raise HTTPException(status_code=404, detail="Summary not available.")
     else:
