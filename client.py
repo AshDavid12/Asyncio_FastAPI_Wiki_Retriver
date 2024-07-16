@@ -22,10 +22,10 @@ def get_latest_article():
 
 
 
-# Example usage
-if __name__ == "__main__":
+# Example for teminal you dont need this --- you can see results when trying in swagger and it also prints in the web server like that
+#if __name__ == "__main__":
     # Post an article
-    post_article("dog")
+    #post_article("dog")
     # Get the latest article
     #get_latest_article()
    
