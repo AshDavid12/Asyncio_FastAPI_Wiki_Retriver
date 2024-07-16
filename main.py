@@ -29,22 +29,22 @@ def receive_article(article: ArticleInput):
     else:
         raise HTTPException(status_code=response.status_code, detail="Error fetching article summary.")
 
-#GET endpoint to fetch the first paragraph of a Wikipedia article directly
-@app.get("/wikipedia/{article_title}")
-def get_wikipedia_first_paragraph(article_title: str):
-    formatted_title = article_title.replace(" ", "_")
-    url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{formatted_title}"
+# #GET endpoint to fetch the first paragraph of a Wikipedia article directly
+# @app.get("/wikipedia/{article_title}")
+# def get_wikipedia_first_paragraph(article_title: str):
+#     formatted_title = article_title.replace(" ", "_")
+#     url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{formatted_title}"
     
-    response = requests.get(url)
+#     response = requests.get(url)
     
-    if response.status_code == 200:
-        data = response.json()
-        if "extract" in data:
-            return {"article_title": article_title, "first_paragraph": data["extract"]}
-        else:
-            raise HTTPException(status_code=404, detail="Summary not available.")
-    else:
-        raise HTTPException(status_code=response.status_code, detail="Error fetching article summary.")
+#     if response.status_code == 200:
+#         data = response.json()
+#         if "extract" in data:
+#             return {"article_title": article_title, "first_paragraph": data["extract"]}
+#         else:
+#             raise HTTPException(status_code=404, detail="Summary not available.")
+#     else:
+#         raise HTTPException(status_code=response.status_code, detail="Error fetching article summary.")
 
 
 
