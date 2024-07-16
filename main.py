@@ -1,27 +1,23 @@
+from fastapi import FastAPI, HTTPException
 import requests
 
-def get_wikipedia_first_paragraph(article_title):
-    # Replace spaces with underscores for the Wikipedia URL
-    #formatted_title = article_title.replace(" ", "_")
-    # Wikipedia API endpoint for article summary
-    url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{article_title}"
+app = FastAPI()
+
+@app.get("/wikipedia/{article_title}")
+def get_wikipedia_first_paragraph(article_title: str):
+    formatted_title = article_title.replace(" ", "_")
+    url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{formatted_title}"
     
-    # Make the GET request
     response = requests.get(url)
     
-    # Check if the request was successful
     if response.status_code == 200:
         data = response.json()
-        # Extract the first paragraph (extract key)
         if "extract" in data:
             first_paragraph = data["extract"]
-            return first_paragraph
+            return {"article_title": article_title, "first_paragraph": first_paragraph}
         else:
-            return "Summary not available."
+            raise HTTPException(status_code=404, detail="Summary not available.")
     else:
-        return f"Error: {response.status_code}"
+        raise HTTPException(status_code=response.status_code, detail="Error fetching article summary.")
 
-# Example usage
-article_title = "Dog"
-first_paragraph = get_wikipedia_first_paragraph(article_title)
-print(first_paragraph)
+# Run the server with: uvicorn your_script_name:app --reload
