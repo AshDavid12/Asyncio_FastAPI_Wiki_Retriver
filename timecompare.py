@@ -13,7 +13,7 @@ async def fetch_url(client, url):
 
 async def main_async(url):
     async with httpx.AsyncClient(follow_redirects=True) as client:
-        tasks = [fetch_url(client, url) for _ in range(N)]
+        tasks = [fetch_url(client, url) for url in urls]
         start_wall_time = time.perf_counter()
         responses = await asyncio.gather(*tasks)
         end_wall_time = time.perf_counter()
@@ -26,7 +26,8 @@ async def main_async(url):
     return total_wall_time
 
 if __name__ == "__main__":
-    url = "https://en.wikipedia.org/wiki/Rock_music"  # Replace with your target URL
+    #url = "https://en.wikipedia.org/wiki/Rock_music"  # Replace with your target URL
 
+    urls =["http://127.0.0.1:8000/articles/cat","http://127.0.0.1:8000/articles/dog","http://127.0.0.1:8000/articles/frog","http://127.0.0.1:8000/articles/human"]
     # Measure async version
-    asyncio.run(main_async(url))
+    asyncio.run(main_async(urls))

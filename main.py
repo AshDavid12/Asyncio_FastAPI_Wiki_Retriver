@@ -12,9 +12,9 @@ class ArticleInput(BaseModel):
     name: str
 
 # POST endpoint to accept an article name
-@app.post("/articles")
-async def receive_article(article: ArticleInput):
-    return await get_wikipedia_first_paragraph(article.name) #add AWAIT
+# @app.post("/articles")
+# async def receive_article(article: ArticleInput):
+#     return await get_wikipedia_first_paragraph(article.name) #add AWAIT
 
 # GET endpoint to fetch the first paragraph of a Wikipedia article directly
 @app.get("/wikipedia/{article_title}")
