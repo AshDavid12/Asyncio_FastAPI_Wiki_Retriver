@@ -14,9 +14,9 @@ state = {"first_paragraph": None}
 class Article(BaseModel):
     name:str
 
-@app.post("/articles/") #this is to accept an article name 
-async def accept_article(article:Article): #create Article class instance called article
-    return await get_first_par(article.name) #add AWAIT
+# @app.post("/articles/") #this is to accept an article name 
+# async def accept_article(article:Article): #create Article class instance called article
+#     return await get_first_par(article.name) #add AWAIT
 
 @app.get("/articles/{article_name}")
 async def get_first_par(article_name:str):
