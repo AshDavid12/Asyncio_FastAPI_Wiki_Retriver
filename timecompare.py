@@ -2,7 +2,7 @@ import httpx
 import asyncio
 import time
 
-N = 100  # Number of concurrent requests
+N = 30  # Number of concurrent requests
 
 async def fetch_url(client, url):
     start_time = time.perf_counter()
@@ -23,7 +23,7 @@ async def main_async(url):
     return total_wall_time
 
 if __name__ == "__main__":
-    url = "http://127.0.0.1:8000/articles/example_article"  # Replace with your target URL
+    url = "https://en.wikipedia.org/wiki/Rock_music"  # Replace with your target URL
 
     # Measure async version
     asyncio.run(main_async(url))
