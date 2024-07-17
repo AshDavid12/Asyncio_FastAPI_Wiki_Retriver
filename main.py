@@ -16,7 +16,7 @@ class Article(BaseModel):
 
 @app.post("/articles/") #this is to accept an article name 
 async def accept_article(article:Article): #create Article class instance called article
-    return get_first_par(article.name) #add AWAIT
+    return await get_first_par(article.name) #add AWAIT
 
 @app.get("/articles/{article_name}")
 async def get_first_par(article_name:str):
