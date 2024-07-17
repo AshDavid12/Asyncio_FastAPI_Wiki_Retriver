@@ -20,10 +20,13 @@ async def main_async(url):
 
     total_wall_time = end_wall_time - start_wall_time
     print(f"Async total wall time: {total_wall_time:.4f} seconds")
+    for i, (status, duration) in enumerate(responses):
+        print(f"Request {i+1}: Status {status}, Time {duration:.4f} seconds")
+    
     return total_wall_time
 
 if __name__ == "__main__":
-    url = "https://en.wikipedia.org/wiki/Human"  # Replace with your target URL
+    url = "https://en.wikipedia.org/wiki/Rock_music"  # Replace with your target URL
 
     # Measure async version
     asyncio.run(main_async(url))
