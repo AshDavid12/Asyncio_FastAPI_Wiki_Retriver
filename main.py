@@ -14,31 +14,7 @@ class ArticleInput(BaseModel):
 # POST endpoint to accept an article name
 @app.post("/articles")
 async def receive_article(article: ArticleInput):
-    formatted_title = article.name.replace(" ", "_")  # Replace spaces with underscores for the Wikipedia URL
-    url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{formatted_title}"  # Construct the URL for the Wikipedia API
-
-    async with httpx.AsyncClient(follow_redirects=True) as client:  # Enable follow redirects
-        try:
-            response = await client.get(url)  # Send a GET request to the Wikipedia API and await the response
-        except httpx.RequestError as exc:
-            # Handle any request exceptions (e.g., network issues)
-            raise HTTPException(status_code=500, detail=f"An error occurred while requesting {exc.request.url!r}.") from exc
-
-    if response.status_code == 200:  # Check if the response status code is 200 (OK)
-        try:
-            data = response.json()  # Parse the response JSON content
-        except ValueError:
-            # Handle JSON parsing errors
-            raise HTTPException(status_code=500, detail="Error parsing response from Wikipedia API.")
-        
-        if "extract" in data:  # Check if the "extract" key is present in the response data
-            state["first_paragraph"] = data["extract"]  # Store the first paragraph in the global state
-            return {"message": "Article received", "article_title": article.name, "first_paragraph": state["first_paragraph"]}  # Return a JSON response
-        else:
-            raise HTTPException(status_code=404, detail="Summary not available.")  # Raise a 404 error if the summary is not available
-    else:
-        # Log detailed error information
-        raise HTTPException(status_code=response.status_code, detail=f"Error fetching article summary. Status code: {response.status_code}, Response: {response.text}")
+    return await get_wikipedia_first_paragraph(article.name) #add AWAIT
 
 # GET endpoint to fetch the first paragraph of a Wikipedia article directly
 @app.get("/wikipedia/{article_title}")
