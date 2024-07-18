@@ -24,6 +24,15 @@ This project involves building a simple FastAPI server that uses asyncio to retr
 - **requests**: For initial synchronous HTTP requests.
 - **Python**: For implementing the server and clients.
 
+### **Branch Explain** 
+- redo branch: async version that uses a pre-existing httpx.AsyncClent created when server started
+- step2 branch - async version with the client inside
+- version1 branch - async version uses requests.get inside
+- simple1 branch - doesnt include async  
+#### **Files**:
+- timecompare.py - a script to test the processing time across three versions (step2,version1,redo).
+- client.py - invoke server
+
 ### **Project Workflow**
 
 ### **Step 1: Setting Up the FastAPI Server**
